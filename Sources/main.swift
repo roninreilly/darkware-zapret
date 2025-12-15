@@ -191,27 +191,28 @@ enum ZapretStrategy: String, CaseIterable, Identifiable {
     var id: String { self.rawValue }
     
     var configContent: String {
+        let commonVars = """
+        TPWS_ENABLE=1
+        TPWS_SOCKS_ENABLE=0
+        INIT_APPLY_FW=1
+        DISABLE_IPV6=0
+        """
+        
         switch self {
         case .splitDisorder:
             return """
-            TPWS_OPT="
-            --filter-tcp=80 --methodeol <HOSTLIST> --new
-            --filter-tcp=443 --split-pos=1,midsld --disorder <HOSTLIST>
-            "
+            \(commonVars)
+            TPWS_OPT="--filter-tcp=80 --methodeol --new --filter-tcp=443 --split-pos=1,midsld --disorder"
             """
         case .fakeSplit:
             return """
-            TPWS_OPT="
-            --filter-tcp=80 --methodeol <HOSTLIST> --new
-            --filter-tcp=443 --split-pos=1,midsld --disorder --fake <HOSTLIST>
-            "
+            \(commonVars)
+            TPWS_OPT="--filter-tcp=80 --methodeol --new --filter-tcp=443 --split-pos=1,midsld --disorder --fake"
             """
         case .fakeOnly:
             return """
-            TPWS_OPT="
-            --filter-tcp=80 --methodeol <HOSTLIST> --new
-            --filter-tcp=443 --fake <HOSTLIST>
-            "
+            \(commonVars)
+            TPWS_OPT="--filter-tcp=80 --methodeol --new --filter-tcp=443 --fake"
             """
         }
     }
