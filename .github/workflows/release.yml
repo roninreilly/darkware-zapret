@@ -11,16 +11,11 @@ permissions:
 jobs:
   build:
     name: Build macOS App
-    runs-on: macos-26
+    runs-on: macos-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Set up Swift
-        uses: swift-actions/setup-swift@v1
-        with:
-          swift-version: "6.0"
 
       - name: Build Swift Project
         run: swift build -c release

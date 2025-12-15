@@ -41,7 +41,7 @@ cat > "$OUTPUT_DIR/$APP_NAME.app/Contents/Info.plist" <<EOF
     <string>APPL</string>
     <string>1.0.4</string>
     <key>LSMinimumSystemVersion</key>
-    <string>13.0</string>
+    <string>15.0</string>
     <key>LSUIElement</key>
     <true/> <!-- This hides the app from the Dock (Tray-only app) -->
     <key>NSHighResolutionCapable</key>
