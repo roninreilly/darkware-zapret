@@ -70,6 +70,6 @@ Since the app is not signed with an obscure Apple Developer ID (which costs $99/
 1. Open Terminal.
 2. Run the following command:
    ```bash
-   xattr -cr /Applications/"darkware zapret.app"
+   /usr/bin/xattr -cr /Applications/"darkware zapret.app"
    ```
 3. Launch the app again.

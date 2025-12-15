@@ -63,7 +63,7 @@ struct ContentView: View {
                             Text("Status")
                                 .font(.body)
                                 .foregroundColor(.primary)
-                            Text(zapretManager.isRunning ? "Protected" : "Paused")
+                            Text(zapretManager.isRunning ? "Active" : "Inactive")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -113,7 +113,7 @@ struct ContentView: View {
                                 Text("Install Service")
                                     .font(.body)
                                     .foregroundColor(.primary)
-                                Text("Required for protection")
+                                Text("Required for DPI bypass")
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
@@ -153,7 +153,7 @@ struct ContentView: View {
                 
                 Spacer()
                 
-                Text(installerManager.isInstalled ? "v1.0.8" : "")
+                Text(installerManager.isInstalled ? "v1.0.9" : "")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
             }

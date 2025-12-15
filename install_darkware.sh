@@ -1,20 +1,20 @@
 #!/bin/bash
 set -e
 TARGET_DIR="/opt/darkware-zapret"
-SOURCE_DIR="$1"
-
-if [ -z "$SOURCE_DIR" ]; then
-    echo "Source directory not provided"
-    exit 1
-fi
 
 # Debug log
 LOG="/tmp/darkware_install.log"
 echo "Starting installation..." > "$LOG"
-echo "Source: '$SOURCE_DIR'" >> "$LOG"
+
+# Detect directory where this script resides
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+SOURCE_DIR="$SCRIPT_DIR/zapret"
+
+echo "Script Dir: '$SCRIPT_DIR'" >> "$LOG"
+echo "Source Dir: '$SOURCE_DIR'" >> "$LOG"
 
 if [ ! -d "$SOURCE_DIR" ]; then
-    echo "Error: Source directory does not exist: $SOURCE_DIR" | tee -a "$LOG"
+    echo "Error: Source directory does not exist at $SOURCE_DIR" | tee -a "$LOG"
     exit 1
 fi
 
