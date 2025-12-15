@@ -70,8 +70,6 @@ cat > "$PLIST_PATH" <<EOF
     </array>
     <key>RunAtLoad</key>
     <true/>
-    <key>KeepAlive</key>
-    <true/>
     <key>StandardErrorPath</key>
     <string>/tmp/darkware-zapret.error.log</string>
     <key>StandardOutPath</key>
