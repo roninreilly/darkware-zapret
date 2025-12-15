@@ -64,8 +64,10 @@ MIT License.
 
 ## Troubleshooting
 
-### "App is damaged and can't be opened"
-Since the app is not signed with an obscure Apple Developer ID (which costs $99/year), macOS puts it in quarantine. To fix this:
+### "App is damaged and can't be opened" / "Move to Bin"
+If you see a message saying the app is damaged or should be moved to the Bin, **don't worry — the file is fine**. This happens because the app is not signed with a paid Apple Developer ID ($99/year), so macOS blocks it by default.
+
+To fix this:
 
 1. Open Terminal.
 2. Run the following command:
