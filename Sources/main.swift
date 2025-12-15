@@ -153,7 +153,7 @@ struct ContentView: View {
                 
                 Spacer()
                 
-                Text(installerManager.isInstalled ? "v1.0.4" : "")
+                Text(installerManager.isInstalled ? "v1.0.6" : "")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
             }

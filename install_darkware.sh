@@ -8,13 +8,23 @@ if [ -z "$SOURCE_DIR" ]; then
     exit 1
 fi
 
+# Debug log
+LOG="/tmp/darkware_install.log"
+echo "Starting installation..." > "$LOG"
+echo "Source: '$SOURCE_DIR'" >> "$LOG"
+
+if [ ! -d "$SOURCE_DIR" ]; then
+    echo "Error: Source directory does not exist: $SOURCE_DIR" | tee -a "$LOG"
+    exit 1
+fi
+
 echo "Installing to $TARGET_DIR..."
 
 # Create dir
 mkdir -p "$TARGET_DIR"
 
-# Copy files (overwrite)
-cp -R "$SOURCE_DIR/"* "$TARGET_DIR/"
+# Copy files (using dot syntax for reliable copying of content)
+cp -R "$SOURCE_DIR/." "$TARGET_DIR/" || { echo "Copy failed" >> "$LOG"; exit 1; }
 
 # Create/Reset strategy config if not exists
 if [ ! -f "$TARGET_DIR/config_custom" ]; then
@@ -31,6 +41,7 @@ if ! grep -q "config_custom" "$CONFIG_FILE"; then
 fi
 
 # Executable permissions
+xattr -d com.apple.quarantine -r "$TARGET_DIR" 2>/dev/null || true
 chmod +x "$TARGET_DIR/init.d/macos/zapret"
 chmod +x "$TARGET_DIR/tpws/tpws"
 
