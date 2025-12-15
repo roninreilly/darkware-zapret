@@ -1,0 +1,20 @@
+# Swift / Xcode
+.build/
+.swiftpm/
+*.xcodeproj
+*.xcworkspace
+
+# macOS
+.DS_Store
+*.dmg
+*.app/
+
+# Darkware Zapret Artifacts
+pack.temp.dmg
+DarkwareZapret_Installer.dmg
+menubar_icon*.png
+menubar_icon.svg
+installer_bg.png
+
+# Logs
+*.log
