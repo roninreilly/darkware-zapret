@@ -5,6 +5,7 @@ APP_NAME="darkware zapret"
 EXECUTABLE_NAME="DarkwareZapret"
 BUNDLE_IDENTIFIER="com.darkware.zapret"
 OUTPUT_DIR="."
+VERSION="1.0.12"
 
 echo "Building..."
 swift build -c release
@@ -39,7 +40,7 @@ cat > "$OUTPUT_DIR/$APP_NAME.app/Contents/Info.plist" <<EOF
     <string>AppIcon</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
-    <string>1.0.11</string>
+    <string>$VERSION</string>
     <key>LSMinimumSystemVersion</key>
     <string>15.0</string>
     <key>LSUIElement</key>
@@ -62,7 +63,7 @@ echo "Signing App Bundle (Ad-Hoc)..."
 codesign --force --deep --sign - "$OUTPUT_DIR/$APP_NAME.app"
 
 echo "Creating DMG Installer..."
-DMG_NAME="DarkwareZapret_Installer"
+DMG_NAME="DarkwareZapret_v${VERSION}_Installer"
 VOL_NAME="Darkware Zapret Installer"
 STAGING_DIR="./dmg_staging"
 
