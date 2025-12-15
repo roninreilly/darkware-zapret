@@ -153,7 +153,7 @@ struct ContentView: View {
                 
                 Spacer()
                 
-                Text(installerManager.isInstalled ? "v1.0.9" : "")
+                Text(installerManager.isInstalled ? "v1.0.10" : "")
                     .font(.caption2)
                     .foregroundStyle(.tertiary)
             }
@@ -364,28 +364,60 @@ class InstallerManager: ObservableObject {
             return
         }
         
-        let zapretSource = resourcePath + "/zapret"
-        let scriptPath = resourcePath + "/install_darkware.sh"
-        let quotedScriptPath = "'\(scriptPath)'"
-        let quotedZapretSource = "'\(zapretSource)'"
+        // Prepare temporary directory for installation to bypass App Translocation/Quarantine issues
+        let tempDir = FileManager.default.temporaryDirectory.appendingPathComponent("darkware_installer_temp")
+        let fileManager = FileManager.default
         
-        let command = "\(quotedScriptPath) \(quotedZapretSource)"
-        let scriptSource = "do shell script \"\(command)\" with administrator privileges"
-        
-        DispatchQueue.global(qos: .userInitiated).async {
-            var error: NSDictionary?
-            if let scriptObject = NSAppleScript(source: scriptSource) {
-                scriptObject.executeAndReturnError(&error)
+        do {
+            // Clean up old temp dir
+            if fileManager.fileExists(atPath: tempDir.path) {
+                try fileManager.removeItem(at: tempDir)
             }
+            try fileManager.createDirectory(at: tempDir, withIntermediateDirectories: true)
             
-            DispatchQueue.main.async {
-                if let error = error {
-                    self.errorMessage = (error[NSAppleScript.errorMessage] as? String) ?? "Installation failed"
-                } else {
-                    self.checkInstallation()
+            // Copy resources to temp
+            let sourceZapret = URL(fileURLWithPath: resourcePath).appendingPathComponent("zapret")
+            let sourceScript = URL(fileURLWithPath: resourcePath).appendingPathComponent("install_darkware.sh")
+            
+            let destZapret = tempDir.appendingPathComponent("zapret")
+            let destScript = tempDir.appendingPathComponent("install_darkware.sh")
+            
+            try fileManager.copyItem(at: sourceZapret, to: destZapret)
+            try fileManager.copyItem(at: sourceScript, to: destScript)
+            
+            // Execute from temp
+            let scriptPath = destScript.path
+            let quotedScriptPath = "'\(scriptPath)'"
+            
+            // We pass temp path to script, though script now self-detects, passing it doesn't hurt
+            let command = "\(quotedScriptPath)"
+            
+            // Make executable just in case
+            try? fileManager.setAttributes([.posixPermissions: 0o777], ofItemAtPath: scriptPath)
+            
+            let scriptSource = "do shell script \"\(command)\" with administrator privileges"
+            
+            DispatchQueue.global(qos: .userInitiated).async {
+                var error: NSDictionary?
+                if let scriptObject = NSAppleScript(source: scriptSource) {
+                    scriptObject.executeAndReturnError(&error)
                 }
-                self.isInstalling = false
+                
+                // Cleanup temp after run (optional, maybe keep for debug?)
+                // try? fileManager.removeItem(at: tempDir)
+                
+                DispatchQueue.main.async {
+                    if let error = error {
+                        self.errorMessage = (error[NSAppleScript.errorMessage] as? String) ?? "Installation failed"
+                    } else {
+                        self.checkInstallation()
+                    }
+                    self.isInstalling = false
+                }
             }
+        } catch {
+            self.errorMessage = "Prep failed: \(error.localizedDescription)"
+            self.isInstalling = false
         }
     }
 }
