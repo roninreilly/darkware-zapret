@@ -62,6 +62,9 @@ chmod +x "$OUTPUT_DIR/$APP_NAME.app/Contents/Resources/install_darkware.sh"
 echo "App Bundle created at $OUTPUT_DIR/$APP_NAME.app"
 
 
+# Refresh bundle to ensure icon is picked up
+touch "$OUTPUT_DIR/$APP_NAME.app"
+
 # Ad-hoc Code Signing (Required for Apple Silicon to run without "Damaged" error)
 echo "Signing App Bundle (Ad-Hoc)..."
 codesign --force --deep --sign - "$OUTPUT_DIR/$APP_NAME.app"
@@ -91,8 +94,8 @@ sleep 2
 # Copy Volume Icon
 if [ -f "DarkwareZapret.icns" ]; then
     cp "DarkwareZapret.icns" "/Volumes/$VOL_NAME/.VolumeIcon.icns"
-    # Set volume icon attribute (might fail if SetFile not found, ignore error)
-    SetFile -a C "/Volumes/$VOL_NAME" 2>/dev/null || true
+    # Set volume icon attribute using xcrun for reliability
+    xcrun SetFile -a C "/Volumes/$VOL_NAME" 2>/dev/null || true
 else
     echo "Warning: DarkwareZapret.icns not found, skipping icon setup."
 fi
