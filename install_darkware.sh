@@ -29,13 +29,18 @@ cp -R "$SOURCE_DIR/." "$TARGET_DIR/" || { echo "Copy failed" >> "$LOG"; exit 1; 
 # Create/Reset strategy config if not exists - write default working config
 if [ ! -f "$TARGET_DIR/config_custom" ]; then
     cat > "$TARGET_DIR/config_custom" <<'CONFIGEOF'
+MODE_FILTER=autohostlist
 TPWS_ENABLE=1
 TPWS_SOCKS_ENABLE=1
 TPWS_PORTS=80,443
 INIT_APPLY_FW=1
-DISABLE_IPV6=0
+DISABLE_IPV6=1
 GZIP_LISTS=0
-TPWS_OPT="--filter-tcp=80 --methodeol --hostlist=/opt/darkware-zapret/ipset/zapret-hosts.txt --hostlist-auto=/opt/darkware-zapret/ipset/zapret-hosts-auto.txt --hostlist-auto-fail-threshold=3 --hostlist-auto-fail-time=60 --hostlist-auto-retrans-threshold=3 --new --filter-tcp=443 --split-pos=1,midsld --disorder --hostlist=/opt/darkware-zapret/ipset/zapret-hosts.txt --hostlist-auto=/opt/darkware-zapret/ipset/zapret-hosts-auto.txt --hostlist-auto-fail-threshold=3 --hostlist-auto-fail-time=60 --hostlist-auto-retrans-threshold=3"
+GETLIST=get_refilter_domains.sh
+TPWS_OPT="
+--filter-tcp=80 --methodeol <HOSTLIST> --new
+--filter-tcp=443 --split-pos=1,midsld --disorder <HOSTLIST>
+"
 CONFIGEOF
 fi
 chmod 666 "$TARGET_DIR/config_custom"
@@ -61,11 +66,11 @@ touch "$TARGET_DIR/ipset/zapret-hosts.txt"
 # Make helper scripts executable
 chmod +x "$TARGET_DIR/ipset/"*.sh
 
-# Try to download Antizapret list (disable gzip because tpws expects plain txt on macos usually, and easy_install disables it)
-echo "Downloading Antizapret hostlist..."
+# Try to download Re-filter list (contains YouTube and other needed domains)
+echo "Downloading Re-filter hostlist..."
 # Run in subshell to not change script cwd, ignore errors to not break install
-(export GZIP_LISTS=0 && cd "$TARGET_DIR/ipset" && ./get_antizapret_domains.sh) || echo "Warning: Failed to download Antizapret list. Using empty list."
- chmod 644 "$TARGET_DIR/ipset/"*.txt
+(export GZIP_LISTS=0 && cd "$TARGET_DIR/ipset" && ./get_refilter_domains.sh) || echo "Warning: Failed to download Re-filter list. Using empty list."
+chmod 644 "$TARGET_DIR/ipset/"*.txt
 
 # Add dummy entry if user list is empty (best practice from install_easy.sh)
 if [ ! -s "$TARGET_DIR/ipset/zapret-hosts-user.txt" ]; then

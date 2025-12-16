@@ -191,32 +191,42 @@ enum ZapretStrategy: String, CaseIterable, Identifiable {
     var id: String { self.rawValue }
     
     var configContent: String {
+        // Use exact same format as original zapret config with <HOSTLIST> placeholders
         let commonVars = """
+        MODE_FILTER=autohostlist
         TPWS_ENABLE=1
         TPWS_SOCKS_ENABLE=1
         TPWS_PORTS=80,443
         INIT_APPLY_FW=1
-        DISABLE_IPV6=0
+        DISABLE_IPV6=1
         GZIP_LISTS=0
+        GETLIST=get_refilter_domains.sh
         """
-        
-        let hostlistArgs = "--hostlist=/opt/darkware-zapret/ipset/zapret-hosts.txt --hostlist-auto=/opt/darkware-zapret/ipset/zapret-hosts-auto.txt --hostlist-auto-fail-threshold=3 --hostlist-auto-fail-time=60 --hostlist-auto-retrans-threshold=3"
         
         switch self {
         case .splitDisorder:
             return """
             \(commonVars)
-            TPWS_OPT="--filter-tcp=80 --methodeol \(hostlistArgs) --new --filter-tcp=443 --split-pos=1,midsld --disorder \(hostlistArgs)"
+            TPWS_OPT="
+            --filter-tcp=80 --methodeol <HOSTLIST> --new
+            --filter-tcp=443 --split-pos=1,midsld --disorder <HOSTLIST>
+            "
             """
         case .fakeSplit:
             return """
             \(commonVars)
-            TPWS_OPT="--filter-tcp=80 --methodeol \(hostlistArgs) --new --filter-tcp=443 --split-pos=1,midsld --disorder --fake \(hostlistArgs)"
+            TPWS_OPT="
+            --filter-tcp=80 --methodeol <HOSTLIST> --new
+            --filter-tcp=443 --split-pos=1,midsld --disorder --dpi-desync-fake-tls=0x00000000 <HOSTLIST>
+            "
             """
         case .fakeOnly:
             return """
             \(commonVars)
-            TPWS_OPT="--filter-tcp=80 --methodeol \(hostlistArgs) --new --filter-tcp=443 --fake \(hostlistArgs)"
+            TPWS_OPT="
+            --filter-tcp=80 --methodeol <HOSTLIST> --new
+            --filter-tcp=443 --dpi-desync-fake-tls=0x00000000 <HOSTLIST>
+            "
             """
         }
     }
