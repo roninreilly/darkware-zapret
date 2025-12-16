@@ -196,6 +196,7 @@ enum ZapretStrategy: String, CaseIterable, Identifiable {
         TPWS_SOCKS_ENABLE=1
         INIT_APPLY_FW=1
         DISABLE_IPV6=0
+        GZIP_LISTS=0
         """
         
         let hostlistArgs = "--hostlist=/opt/darkware-zapret/ipset/zapret-hosts.txt --hostlist-auto=/opt/darkware-zapret/ipset/zapret-hosts-auto.txt --hostlist-auto-fail-threshold=3 --hostlist-auto-fail-time=60 --hostlist-auto-retrans-threshold=3"

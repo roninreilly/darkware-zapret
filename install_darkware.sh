@@ -53,10 +53,10 @@ touch "$TARGET_DIR/ipset/zapret-hosts.txt"
 # Make helper scripts executable
 chmod +x "$TARGET_DIR/ipset/"*.sh
 
-# Try to download Antizapret list
+# Try to download Antizapret list (disable gzip because tpws expects plain txt on macos usually, and easy_install disables it)
 echo "Downloading Antizapret hostlist..."
 # Run in subshell to not change script cwd, ignore errors to not break install
-(cd "$TARGET_DIR/ipset" && ./get_antizapret_domains.sh) || echo "Warning: Failed to download Antizapret list. Using empty list."
+(export GZIP_LISTS=0 && cd "$TARGET_DIR/ipset" && ./get_antizapret_domains.sh) || echo "Warning: Failed to download Antizapret list. Using empty list."
  chmod 644 "$TARGET_DIR/ipset/"*.txt
 
 # Add dummy entry if user list is empty (best practice from install_easy.sh)
