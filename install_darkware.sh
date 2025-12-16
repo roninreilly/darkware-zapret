@@ -40,6 +40,20 @@ if ! grep -q "config_custom" "$CONFIG_FILE"; then
     echo ". \"$TARGET_DIR/config_custom\"" >> "$CONFIG_FILE"
 fi
 
+# Create necessary directories
+mkdir -p "$TARGET_DIR/ipset"
+mkdir -p "$TARGET_DIR/init.d/macos"
+
+# Initialize hostlist files to prevent startup errors
+touch "$TARGET_DIR/ipset/zapret-hosts-user.txt"
+touch "$TARGET_DIR/ipset/zapret-hosts-auto.txt"
+touch "$TARGET_DIR/ipset/zapret-hosts-user-exclude.txt"
+
+# Add dummy entry if user list is empty (best practice from install_easy.sh)
+if [ ! -s "$TARGET_DIR/ipset/zapret-hosts-user.txt" ]; then
+    echo "nonexistent.domain" >> "$TARGET_DIR/ipset/zapret-hosts-user.txt"
+fi
+
 # Executable permissions
 xattr -d com.apple.quarantine -r "$TARGET_DIR" 2>/dev/null || true
 chmod +x "$TARGET_DIR/init.d/macos/zapret"
