@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/github/license/RoninReilly/darkware-zapret?style=plastic&color=blue)](LICENSE)
 [![Stars](https://img.shields.io/github/stars/RoninReilly/darkware-zapret?style=plastic&color=yellow)](https://github.com/RoninReilly/darkware-zapret/stargazers)
 
-**🇷[На русском](README.ru.md)**
+**[На русском](README.ru.md)**
 
 **Darkware Zapret** is a native macOS menu bar app that wraps the [zapret](https://github.com/bol-van/zapret) DPI bypass tool into a simple one-click solution.
 

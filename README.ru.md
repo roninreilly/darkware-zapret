@@ -4,7 +4,7 @@
 [![Платформа](https://img.shields.io/badge/platform-macOS%2013%2B-black?style=plastic)](https://github.com/RoninReilly/darkware-zapret)
 [![Лицензия](https://img.shields.io/github/license/RoninReilly/darkware-zapret?style=plastic&color=blue)](LICENSE)
 
-**🇬🇧 [Read in English](README.md)**
+** [Read in English](README.md)**
 
 **Darkware Zapret** — GUI для [zapret](https://github.com/bol-van/zapret) на macOS. Обход блокировок YouTube, Discord и других сайтов.
 
