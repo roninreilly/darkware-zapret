@@ -1,77 +1,66 @@
 # Darkware Zapret for macOS
 
-**Darkware Zapret** is a native macOS status bar application that wraps the powerful [zapret](https://github.com/bol-van/zapret) DPI bypass tool into a user-friendly, one-click solution.
+[![Release](https://img.shields.io/github/v/release/RoninReilly/darkware-zapret?style=flat-square)](https://github.com/RoninReilly/darkware-zapret/releases/latest)
+[![Platform](https://img.shields.io/badge/platform-macOS%2013%2B-blue?style=flat-square)](https://github.com/RoninReilly/darkware-zapret)
+[![License](https://img.shields.io/github/license/RoninReilly/darkware-zapret?style=flat-square)](LICENSE)
+[![Stars](https://img.shields.io/github/stars/RoninReilly/darkware-zapret?style=flat-square)](https://github.com/RoninReilly/darkware-zapret/stargazers)
+
+**🇷🇺 [Читать на русском](README.ru.md)**
+
+**Darkware Zapret** is a native macOS menu bar app that wraps the [zapret](https://github.com/bol-van/zapret) DPI bypass tool into a simple one-click solution.
 
 ![Darkware Zapret UI](assets/preview.png)
 
 ## Features
 
-- **Native macOS UI**: Clean, modern SwiftUI interface that lives in your menu bar.
-- **One-Click Protection**: Instantly toggle DPI bypass on and off.
-- **Smart Strategies**: Choose between pre-configured bypass strategies (e.g., specific for YouTube/Discord or generic) directly from the UI.
-- **Auto-Start**: Automatically launches and protects your connection on system startup (via LaunchDaemon).
-- **Persistent Configuration**: Your strategy settings are saved and persist across updates.
-- **Secure**: Uses `sudoers` for privilege escalation, running securely in the background.
+- **Native macOS UI** — Clean SwiftUI interface in your menu bar
+- **One-Click Toggle** — Instantly enable/disable DPI bypass
+- **Multiple Strategies** — Switch between bypass methods for different services
+- **Auto-Start** — Launches automatically on system startup
+- **Auto-Hostlist** — Automatically detects and adds blocked domains
 
 ## Installation
 
-1. Download the latest `DarkwareZapret_Installer.dmg` from Releases.
-2. Open the DMG and drag **Darkware Zapret** to the **Applications** folder.
-3. Launch the app.
-4. Click **Install Service** in the menu to set up the background daemon (requires Administrator password once).
-5. Toggle the switch to **ON**.
+1. Download [`DarkwareZapret_Installer.dmg`](https://github.com/RoninReilly/darkware-zapret/releases/latest) from Releases
+2. Open DMG, drag app to **Applications**
+3. Launch the app
+4. Click **Install Service** (requires admin password once)
+5. Toggle switch to **ON**
+
+> **Note:** If you see "App is damaged" error, run in Terminal:
+> ```bash
+> xattr -cr /Applications/"darkware zapret.app"
+> ```
 
 ## Strategies
 
-- **Split + Disorder (Default)**: Balanced strategy, works for most services including Discord and YouTube.
-- **Fake + Split**: More aggressive, attempts to fool DPI with fake packets.
-- **Fake Only**: Uses only fake packets.
+| Strategy | Description | Best for |
+|----------|-------------|----------|
+| **Split + Disorder** | Basic TCP splitting with disorder | YouTube, most sites |
+| **Discord Fix** | Uses TLS record splitting | Discord, if basic doesn't work |
+| **TLSRec + Split** | Alternative TLS splitting | Some ISPs |
+| **Aggressive** | Multiple techniques combined | Last resort |
+
+## How it Works
+
+The app uses `tpws` transparent proxy to modify outgoing TCP traffic, bypassing DPI (Deep Packet Inspection) filters. Traffic is redirected through macOS PF firewall rules.
 
 ## Build from Source
 
-Requirements:
-- macOS 13.0+
-- Xcode 14+ (or Command Line Tools)
-
 ```bash
-# Clone repository
-git clone https://github.com/your-repo/darkware-zapret.git
+git clone https://github.com/RoninReilly/darkware-zapret.git
 cd darkware-zapret
-
-# Build release
 swift build -c release
-
-# Create App Bundle and DMG
 ./create_app.sh
 ```
 
-The resulting `.dmg` will be in the project root.
-
-## Architecture
-
-- **Frontend**: SwiftUI (macOS MenuBarExtra).
-- **Backend**: Shell scripts wrapping `tpws` binary from `zapret`.
-- **Persistence**: `UserDefaults` for UI state, flat file for `zapret` config injection.
+Requires macOS 13+ and Xcode Command Line Tools.
 
 ## Credits
 
-- Powered by [zapret](https://github.com/bol-van/zapret) by bol-van.
-- Built by Darkware.
+- Powered by [zapret](https://github.com/bol-van/zapret) by bol-van
+- Hostlist from [Re-filter](https://github.com/1andrevich/Re-filter-lists)
 
 ## License
 
-MIT License.
-
-## Troubleshooting
-
-### "App is damaged and can't be opened" / "Move to Bin"
-If you see a message saying the app is damaged or should be moved to the Bin, **don't worry — the file is fine**. This happens because the app is not signed with a paid Apple Developer ID ($99/year), so macOS blocks it by default.
-
-To fix this:
-
-1. Open Terminal.
-2. Run the following command:
-   ```bash
-   /usr/bin/xattr -cr /Applications/"darkware zapret.app"
-   ```
-3. Launch the app again.
+MIT License
