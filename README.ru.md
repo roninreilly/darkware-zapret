@@ -1,8 +1,8 @@
 # Darkware Zapret для macOS
 
-[![Релиз](https://img.shields.io/github/v/release/RoninReilly/darkware-zapret?style=plastic&color=green)](https://github.com/RoninReilly/darkware-zapret/releases/latest)
-[![Платформа](https://img.shields.io/badge/platform-macOS%2013%2B-black?style=plastic)](https://github.com/RoninReilly/darkware-zapret)
-[![Лицензия](https://img.shields.io/github/license/RoninReilly/darkware-zapret?style=plastic&color=blue)](LICENSE)
+[![Релиз](https://img.shields.io/github/v/release/RoninReilly/darkware-zapret?style=flat&color=green)](https://github.com/RoninReilly/darkware-zapret/releases/latest)
+[![Платформа](https://img.shields.io/badge/platform-macOS%2013%2B-black?style=flat)](https://github.com/RoninReilly/darkware-zapret)
+[![Лицензия](https://img.shields.io/github/license/RoninReilly/darkware-zapret?style=flat&color=blue)](LICENSE)
 
 ** [Read in English](README.md)**
 
