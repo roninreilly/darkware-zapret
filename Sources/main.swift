@@ -162,7 +162,7 @@ struct ContentView: View {
             .padding(.vertical, 10)
         }
         .frame(width: 320)
-        .containerBackground(.regularMaterial, for: .window)
+        .background(.regularMaterial)
         .task {
             installerManager.checkInstallation()
             await zapretManager.updateStatus()
