@@ -50,11 +50,10 @@ The app uses `tpws` transparent proxy to modify outgoing TCP traffic, bypassing 
 ```bash
 git clone https://github.com/RoninReilly/darkware-zapret.git
 cd darkware-zapret
-swift build -c release
 ./create_app.sh
 ```
 
-Requires macOS 13+ and Xcode Command Line Tools.
+> **Note:** Building requires macOS 15+ and Xcode 16+ (Swift 6). The pre-built binary from [Releases](https://github.com/RoninReilly/darkware-zapret/releases) works on macOS 13+.
 
 ## Credits
 
