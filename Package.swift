@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
     name: "DarkwareZapret",
     platforms: [
-        .macOS(.v14)
+        .macOS(.v13)
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.

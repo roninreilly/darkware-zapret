@@ -57,7 +57,7 @@ struct ContentView: View {
                             .font(.system(size: 16))
                             .foregroundStyle(zapretManager.isRunning ? .green : .secondary)
                             .frame(width: 20)
-                            .contentTransition(.symbolEffect(.replace))
+                            .animation(.easeInOut, value: zapretManager.isRunning)
                         
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Status")
@@ -174,7 +174,7 @@ struct ContentView: View {
                 }
             }
         }
-        .onChange(of: installerManager.isInstalled) { _, newValue in
+        .onChange(of: installerManager.isInstalled) { newValue in
             if newValue {
                 Task { await zapretManager.updateStatus() }
             }
