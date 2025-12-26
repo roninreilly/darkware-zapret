@@ -11,7 +11,7 @@ VERSION="${1:-1.0.14}"
 VERSION="${VERSION#v}"
 
 echo "Building..."
-swift build -c release
+swift build -c release --arch arm64 --arch x86_64
 
 echo "Creating App Bundle..."
 mkdir -p "$OUTPUT_DIR/$APP_NAME.app/Contents/MacOS"
@@ -46,7 +46,7 @@ cat > "$OUTPUT_DIR/$APP_NAME.app/Contents/Info.plist" <<EOF
     <key>CFBundleShortVersionString</key>
     <string>$VERSION</string>
     <key>LSMinimumSystemVersion</key>
-    <string>15.0</string>
+    <string>13.0</string>
     <key>LSUIElement</key>
     <true/> <!-- This hides the app from the Dock (Tray-only app) -->
     <key>NSHighResolutionCapable</key>

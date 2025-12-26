@@ -21,7 +21,7 @@ jobs:
         run: |
           ls -la
           cd zapret_src && make mac && cd ..
-          swift build -c release
+          swift build -c release --arch arm64 --arch x86_64
 
       - name: Create App Bundle and DMG
         run: |
