@@ -92,6 +92,15 @@ swift build -c release
 - Основано на [zapret](https://github.com/bol-van/zapret) от bol-van
 - Хостлист от [Re-filter](https://github.com/1andrevich/Re-filter-lists)
 
+## Поддержать разработку
+
+Для того чтобы приложение работало "из коробки" (без ошибок "файл поврежден" и команд в терминале), необходим сертификат Apple Developer Program ($99/год).
+
+Если вы хотите помочь с покупкой сертификата:
+
+- **Solana (SOL):** `2CP3BLyPSjiKYcr6j17UJ35FmmBdvVWkWwESqaeuqMCu`
+- **ETH / Polygon:** `0x8aa4a9784995C8f558A46CdB604C7440d0506044`
+
 ## Лицензия
 
 MIT License

@@ -86,6 +86,15 @@ cd zapret_src/tpws && make mac && cd ../..
 - Powered by [byedpi](https://github.com/hufrea/byedpi) by hufrea (ciadpi engine)
 - Hostlist from [Re-filter](https://github.com/1andrevich/Re-filter-lists)
 
+## Support
+
+Development requires an Apple Developer Program membership ($99/year) to sign and notarize the app, protecting it from "damaged" errors and Gatekeeper blocks.
+
+If you'd like to help fund the certificate:
+
+- **Solana (SOL):** `2CP3BLyPSjiKYcr6j17UJ35FmmBdvVWkWwESqaeuqMCu`
+- **ETH / Polygon:** `0x8aa4a9784995C8f558A46CdB604C7440d0506044`
+
 ## License
 
 MIT License
