@@ -208,6 +208,15 @@ test_ciadpi_suite() {
     # Auto
     perform_test "$CIADPI" "ciadpi" "Auto (Torst)" "-p $SOCKS_PORT -A torst -d 1"
     perform_test "$CIADPI" "ciadpi" "Auto (Redirect)" "-p $SOCKS_PORT -A redirect -d 1"
+
+    # Extended (Heavy)
+    echo "  [.] Testing Advanced Strategies..."
+    perform_test "$CIADPI" "ciadpi" "OOB TTL 3" "-p $SOCKS_PORT --oob 1 --ttl 3"
+    perform_test "$CIADPI" "ciadpi" "OOB TTL 5" "-p $SOCKS_PORT --oob 1 --ttl 5"
+    perform_test "$CIADPI" "ciadpi" "OOB+Disorder+TTL" "-p $SOCKS_PORT --oob 1 -d 1 --ttl 3"
+    perform_test "$CIADPI" "ciadpi" "Disorder SNI + Fake" "-p $SOCKS_PORT -d 1+s --oob 1"
+    perform_test "$CIADPI" "ciadpi" "Split SNI+Disorder" "-p $SOCKS_PORT -s 1+s -d 1+s"
+    perform_test "$CIADPI" "ciadpi" "Disorder SNI (Auto)" "-p $SOCKS_PORT -A torst -d 1+s"
     
     echo ""
 }
@@ -230,6 +239,7 @@ print_summary() {
         echo "1. ISP blocks IP/Port (not DPI)."
         echo "2. Protocol (QUIC/UDP) issues."
         echo "3. You need VPN."
+        echo "4. Try disabling IPv6 in System Settings."
     fi
     echo "=== DONE ==="
 }
