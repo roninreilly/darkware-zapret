@@ -35,10 +35,10 @@
 
 | Стратегия | Описание | Для чего |
 |-----------|----------|----------|
-| **Split + Disorder** | Базовое разбиение TCP с disorder | YouTube, большинство сайтов |
-| **Discord Fix** | Разбиение TLS records | Discord |
-| **TLSRec + Split** | Альтернативное TLS разбиение | Некоторые провайдеры |
-| **Aggressive** | Комбинация нескольких техник | Крайний случай |
+| **Split+Disorder** | Разбиение TCP с переупорядочиванием | YouTube, большинство сайтов |
+| **TLSRec+Split** | TLS record + TCP разбиение | Discord, Telegram |
+| **TLSRec MidSLD** | TLS record на границе домена | Некоторые провайдеры |
+| **TLSRec+OOB** | TLS record + OOB байт | Крайний случай |
 
 ## Как это работает
 

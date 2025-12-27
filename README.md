@@ -36,10 +36,10 @@
 
 | Strategy | Description | Best for |
 |----------|-------------|----------|
-| **Split + Disorder** | Basic TCP splitting with disorder | YouTube, most sites |
-| **Discord Fix** | Uses TLS record splitting | Discord, if basic doesn't work |
-| **TLSRec + Split** | Alternative TLS splitting | Some ISPs |
-| **Aggressive** | Multiple techniques combined | Last resort |
+| **Split+Disorder** | TCP splitting with packet reordering | YouTube, most sites |
+| **TLSRec+Split** | TLS record + TCP splitting | Discord, Telegram |
+| **TLSRec MidSLD** | TLS record split at domain boundary | Some ISPs |
+| **TLSRec+OOB** | TLS record + OOB byte injection | Last resort |
 
 ## How it Works
 

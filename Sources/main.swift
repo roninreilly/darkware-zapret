@@ -163,7 +163,7 @@ struct ContentView: View {
                     }
                     .buttonStyle(.plain)
                     .font(.subheadline)
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(.secondary)
                 }
                 
                 Spacer()
@@ -204,6 +204,7 @@ struct ContentView: View {
             defer: false
         )
         window.title = "Diagnostics"
+        window.isReleasedWhenClosed = false  // Не закрывать приложение при закрытии окна
         window.contentView = NSHostingView(rootView: DiagnosticsView(diagnosticsManager: diagnosticsManager))
         window.center()
         window.makeKeyAndOrderFront(nil)
@@ -213,10 +214,10 @@ struct ContentView: View {
 
 // Strategies
 enum ZapretStrategy: String, CaseIterable, Identifiable {
-    case splitDisorder = "Split + Disorder"
-    case discordFix = "Discord Fix"
-    case tlsrecSplit = "TLSRec + Split"
-    case aggressive = "Aggressive"
+    case splitDisorder = "Split+Disorder"
+    case discordFix = "TLSRec+Split"
+    case tlsrecSplit = "TLSRec MidSLD"
+    case aggressive = "TLSRec+OOB"
     
     var id: String { self.rawValue }
     
@@ -483,19 +484,10 @@ class InstallerManager: ObservableObject {
 
 // MARK: - Diagnostics
 
-enum ScanLevel: String, CaseIterable, Identifiable {
-    case quick = "Quick"
-    case standard = "Standard"
-    case force = "Force"
-    
-    var id: String { rawValue }
-}
-
 @MainActor
 class DiagnosticsManager: ObservableObject {
     @Published var isRunning = false
     @Published var output = ""
-    @Published var scanLevel: ScanLevel = .quick
     @Published var testDomain = "discord.com"
     
     private var process: Process?
@@ -503,14 +495,15 @@ class DiagnosticsManager: ObservableObject {
     func runDiagnostics() {
         guard !isRunning else { return }
         isRunning = true
-        output = "Starting diagnostics...\n"
+        output = ""
         
         let zapretPath = "/opt/darkware-zapret"
-        let blockcheckPath = "\(zapretPath)/blockcheck.sh"
+        let blockcheckPath = "\(zapretPath)/macos_blockcheck.sh"
         
-        // Check if blockcheck exists
+        // Check if macos_blockcheck exists
         guard FileManager.default.fileExists(atPath: blockcheckPath) else {
-            output += "Error: blockcheck.sh not found at \(blockcheckPath)\n"
+            output += "Error: macos_blockcheck.sh not found at \(blockcheckPath)\n"
+            output += "Please reinstall Darkware Zapret.\n"
             isRunning = false
             return
         }
@@ -522,11 +515,7 @@ class DiagnosticsManager: ObservableObject {
             process.executableURL = URL(fileURLWithPath: "/bin/bash")
             process.arguments = ["-c", """
                 cd "\(zapretPath)" && \
-                BATCH=1 \
-                SKIP_PKTWS=1 \
-                SCANLEVEL=\(self.scanLevel.rawValue.lowercased()) \
-                DOMAINS="\(self.testDomain)" \
-                ./blockcheck.sh 2>&1
+                ./macos_blockcheck.sh --domain="\(self.testDomain)" --timeout=5 2>&1
                 """]
             
             process.currentDirectoryURL = URL(fileURLWithPath: zapretPath)
@@ -591,21 +580,10 @@ struct DiagnosticsView: View {
                     .font(.subheadline)
                 TextField("Domain to test", text: $diagnosticsManager.testDomain)
                     .textFieldStyle(.roundedBorder)
-                    .frame(width: 150)
+                    .frame(width: 200)
                     .disabled(diagnosticsManager.isRunning)
                 
                 Spacer()
-                
-                Text("Level:")
-                    .font(.subheadline)
-                Picker("", selection: $diagnosticsManager.scanLevel) {
-                    ForEach(ScanLevel.allCases) { level in
-                        Text(level.rawValue).tag(level)
-                    }
-                }
-                .pickerStyle(.menu)
-                .frame(width: 120)
-                .disabled(diagnosticsManager.isRunning)
             }
             .padding(.horizontal)
             .padding(.vertical, 8)
