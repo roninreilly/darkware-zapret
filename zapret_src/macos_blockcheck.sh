@@ -80,16 +80,23 @@ check_direct() {
     echo "HTTP ($HTTP_URL): $code"
     
     # HTTPS
-    code=$(curl -s --max-time "$CURL_TIMEOUT" -o /dev/null -w "%{http_code}" "$TEST_URL" 2>&1)
-    if echo "$code" | grep -q "^[0-9]\+$"; then
-         if [ "$code" -ge 200 ] && [ "$code" -lt 400 ]; then
-             echo "HTTPS ($TEST_URL): OK ($code)"
-             echo "NOTE: It seems you are NOT blocked on this domain!"
+    # We fetch content to verify it's not a block page
+    local body
+    body=$(curl -s --max-time "$CURL_TIMEOUT" "$TEST_URL" 2>&1)
+    local ret=$?
+    
+    if [ $ret -eq 0 ]; then
+         # Check if content looks like Discord (or whatever domain we check)
+         # Using case-insensitive grep
+         if echo "$body" | grep -q -i "discord"; then
+             echo "HTTPS ($TEST_URL): OK (200) - Content Verified"
+             echo "NOTE: It seems you are NOT blocked on this domain directly!"
          else
-             echo "HTTPS ($TEST_URL): HTTP Code $code"
+             echo "HTTPS ($TEST_URL): BLOCKED (Fake 200 / Block Page)"
+             echo "NOTE: ISP intercepts connection (Content mismatch)."
          fi
     else
-         echo "HTTPS ($TEST_URL): BLOCKED (Error: $code)"
+         echo "HTTPS ($TEST_URL): BLOCKED (curl error $ret)"
     fi
     echo ""
 }
