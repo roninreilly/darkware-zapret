@@ -33,12 +33,12 @@
 
 ## Стратегии
 
-| Стратегия | Описание | Для чего |
-|-----------|----------|----------|
-| **Split+Disorder** | Разбиение TCP с переупорядочиванием | YouTube, большинство сайтов |
-| **TLSRec+Split** | TLS record + TCP разбиение | Discord, Telegram |
-| **TLSRec MidSLD** | TLS record на границе домена | Некоторые провайдеры |
-| **TLSRec+OOB** | TLS record + OOB байт | Крайний случай |
+| Стратегия | Описание |
+|-----------|----------|
+| **Split+Disorder** | Разбиение TCP с переупорядочиванием |
+| **TLSRec+Split** | TLS record + TCP разбиение |
+| **TLSRec MidSLD** | TLS record на границе домена |
+| **TLSRec+OOB** | TLS record + OOB байт |
 
 ## Как это работает
 

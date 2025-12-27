@@ -34,12 +34,12 @@
 
 ## Strategies
 
-| Strategy | Description | Best for |
-|----------|-------------|----------|
-| **Split+Disorder** | TCP splitting with packet reordering | YouTube, most sites |
-| **TLSRec+Split** | TLS record + TCP splitting | Discord, Telegram |
-| **TLSRec MidSLD** | TLS record split at domain boundary | Some ISPs |
-| **TLSRec+OOB** | TLS record + OOB byte injection | Last resort |
+| Strategy | Description |
+|----------|-------------|
+| **Split+Disorder** | TCP splitting with packet reordering |
+| **TLSRec+Split** | TLS record + TCP splitting |
+| **TLSRec MidSLD** | TLS record split at domain boundary |
+| **TLSRec+OOB** | TLS record + OOB byte injection |
 
 ## How it Works
 
