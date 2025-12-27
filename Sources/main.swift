@@ -343,8 +343,8 @@ enum ByeDPIStrategy: String, CaseIterable, Identifiable {
             // Disorder at SNI position
             return ["-d", "1+s"]
         case .fake:
-            // Fake packets with low TTL
-            return ["-d", "1", "-f", "-1", "-t", "6"]
+            // Fake packets strategy (using OOB + Disorder)
+            return ["-d", "1", "--oob", "1"]
         case .auto:
             // Auto detection
             return ["-A", "torst", "-d", "1"]
@@ -358,7 +358,7 @@ enum ByeDPIStrategy: String, CaseIterable, Identifiable {
         case .disorderSNI:
             return "Split at SNI & reverse order"
         case .fake:
-            return "Send fake packets with low TTL"
+            return "Injects fake data (OOB) to fool DPI"
         case .auto:
             return "Auto-detect blocking type"
         }
