@@ -6,7 +6,7 @@ EXECUTABLE_NAME="DarkwareZapret"
 BUNDLE_IDENTIFIER="com.darkware.zapret"
 OUTPUT_DIR="."
 # Get version from argument or default to 1.0.0
-VERSION="${1:-1.0.14}"
+VERSION="${1:-1.0.39}"
 # Strip leading 'v' (e.g. v1.0.12 -> 1.0.12)
 VERSION="${VERSION#v}"
 
@@ -14,6 +14,7 @@ echo "Building..."
 swift build -c release --arch arm64 --arch x86_64 -Xswiftc -parse-as-library
 
 echo "Creating App Bundle..."
+rm -rf "$OUTPUT_DIR/$APP_NAME.app"
 mkdir -p "$OUTPUT_DIR/$APP_NAME.app/Contents/MacOS"
 mkdir -p "$OUTPUT_DIR/$APP_NAME.app/Contents/Resources"
 
