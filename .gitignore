@@ -18,3 +18,13 @@ installer_bg.png
 
 # Logs
 *.log
+
+# Release output
+dist/
+
+# Local leftovers from the retired 1.x source/build tree
+/zapret_src/
+
+# Local workspace files
+.agent/
+.private/

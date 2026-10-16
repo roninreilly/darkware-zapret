@@ -1,42 +1,44 @@
-name: Build and Release
+name: Build and release
 
 on:
   push:
-    tags:
-      - 'v*'
+    tags: ['v*']
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  build:
-    name: Build macOS App
-    runs-on: macos-26
-
+  release:
+    runs-on: macos-15
+    permissions:
+      contents: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Build Swift Project
-        run: |
-          ls -la
-          cd zapret_src && make mac && cd ..
-          swift build -c release --arch arm64 --arch x86_64 -Xswiftc -parse-as-library
-
-      - name: Create App Bundle and DMG
-        run: |
-          chmod +x create_app.sh
-          # Create dummy icons to prevent script failure if they are missing locally but script expects them
-          # (Assuming script uses internal SF Symbols logic now, but checking just in case)
-          ./create_app.sh ${{ github.ref_name }}
-
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        if: startsWith(github.ref, 'refs/tags/')
-        with:
-          files: "*.dmg"
-          generate_release_notes: true
-          draft: false
-          prerelease: false
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Test, build universal app and package
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_REF: ${{ github.ref_name }}
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            ./create_app.sh "$RELEASE_REF"
+          else
+            ./create_app.sh
+          fi
+          swift test
+      - name: Verify archive checksums
+        run: cd dist && shasum -a 256 -c SHA256SUMS
+      - name: Publish tagged release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_REF: ${{ github.ref_name }}
+        run: |
+          FLAGS=()
+          if [[ "$RELEASE_REF" == *-* ]]; then FLAGS+=(--prerelease --latest=false); fi
+          FLAGS+=(--notes-file CHANGELOG.md)
+          if gh release view "$RELEASE_REF" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_REF" dist/*.dmg dist/*.zip dist/*_Source.tar.gz dist/*.provenance.json dist/SHA256SUMS --clobber
+            gh release edit "$RELEASE_REF" --draft=false --title "Darkware Zapret $RELEASE_REF" "${FLAGS[@]}"
+          else
+            gh release create "$RELEASE_REF" dist/*.dmg dist/*.zip dist/*_Source.tar.gz dist/*.provenance.json dist/SHA256SUMS --verify-tag --title "Darkware Zapret $RELEASE_REF" "${FLAGS[@]}"
+          fi

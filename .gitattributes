@@ -1,0 +1,5 @@
+# Preserve pinned upstream files byte-for-byte, including original whitespace.
+vendor/** -text -whitespace
+native/default-lists/** -text -whitespace
+native/strategies/** -text -whitespace
+native/bin/** binary
