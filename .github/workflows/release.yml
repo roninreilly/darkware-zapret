@@ -35,7 +35,7 @@ jobs:
         run: |
           FLAGS=()
           if [[ "$RELEASE_REF" == *-* ]]; then FLAGS+=(--prerelease --latest=false); fi
-          NOTES_PATH="docs/RELEASE-${RELEASE_REF#v}.md"
+          NOTES_PATH="docs/RELEASE-$RELEASE_REF.md"
           if [[ -f "$NOTES_PATH" ]]; then
             # Release descriptions are not rendered relative to the source docs directory.
             sed -e "s|](RESEARCH-2026-10.md)|](https://github.com/$GITHUB_REPOSITORY/blob/$RELEASE_REF/docs/RESEARCH-2026-10.md)|g" \
