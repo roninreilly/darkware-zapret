@@ -1,154 +1,90 @@
 #!/bin/bash
-set -e
-
-APP_NAME="darkware zapret"
-EXECUTABLE_NAME="DarkwareZapret"
-BUNDLE_IDENTIFIER="com.darkware.zapret"
-OUTPUT_DIR="."
-# Get version from argument or default to 1.0.0
-VERSION="${1:-1.0.39}"
-# Strip leading 'v' (e.g. v1.0.12 -> 1.0.12)
-VERSION="${VERSION#v}"
-
-echo "Building..."
-swift build -c release --arch arm64 --arch x86_64 -Xswiftc -parse-as-library
-
-echo "Creating App Bundle..."
-rm -rf "$OUTPUT_DIR/$APP_NAME.app"
-mkdir -p "$OUTPUT_DIR/$APP_NAME.app/Contents/MacOS"
-mkdir -p "$OUTPUT_DIR/$APP_NAME.app/Contents/Resources"
-
-# Copy binary - check both locations (single arch vs multi-arch build)
-if [ -f ".build/apple/Products/Release/$EXECUTABLE_NAME" ]; then
-    cp ".build/apple/Products/Release/$EXECUTABLE_NAME" "$OUTPUT_DIR/$APP_NAME.app/Contents/MacOS/$APP_NAME"
-elif [ -f ".build/release/$EXECUTABLE_NAME" ]; then
-    cp ".build/release/$EXECUTABLE_NAME" "$OUTPUT_DIR/$APP_NAME.app/Contents/MacOS/$APP_NAME"
-else
-    echo "Error: Binary not found!"
-    exit 1
-fi
-
-echo "Copying resources..."
-cp -R "zapret_src" "$OUTPUT_DIR/$APP_NAME.app/Contents/Resources/zapret"
-cp "install_darkware.sh" "$OUTPUT_DIR/$APP_NAME.app/Contents/Resources/"
-cp "DarkwareZapret.icns" "$OUTPUT_DIR/$APP_NAME.app/Contents/Resources/AppIcon.icns"
-
-# Create Info.plist
-cat > "$OUTPUT_DIR/$APP_NAME.app/Contents/Info.plist" <<EOF
+# Builds a universal app, compressed DMG, ZIP, matching source and provenance offline.
+set -euo pipefail
+ROOT=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+cd "$ROOT"
+VERSION=${1:-$(cat "$ROOT/VERSION")}
+VERSION=${VERSION#v}
+[[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-(alpha|beta|rc)\.[0-9]+)?$ ]] || { echo 'Invalid semantic version.' >&2; exit 1; }
+CORE_VERSION=${VERSION%%-*}
+BUNDLE_VERSION=$CORE_VERSION
+if [[ "$VERSION" == *-* ]]; then BUNDLE_VERSION="${CORE_VERSION}b${VERSION##*.}"; fi
+DIST="$ROOT/dist"
+APP="$DIST/darkware zapret.app"
+STEM="DarkwareZapret_v${VERSION}"
+mkdir -p "$DIST" "$ROOT/.build"
+./scripts/test-native.sh
+./scripts/build-engines.sh
+./scripts/check-runtime-engines.sh
+./scripts/check-engine-presets.sh
+/usr/bin/python3 ./scripts/test-native-lifecycle.py
+/usr/bin/python3 ./scripts/smoke-socks.py "$ROOT/.build/engines"
+# A multi-architecture SwiftPM build requires Xcode's xcbuild. Separate triples
+# also work with Command Line Tools and keep the deployment target at macOS 13.
+SWIFT_BINARIES=()
+for ARCH in arm64 x86_64; do
+    SCRATCH="$ROOT/.build/app-$ARCH"
+    TRIPLE="$ARCH-apple-macosx13.0"
+    swift build --scratch-path "$SCRATCH" -c release --triple "$TRIPLE" -Xswiftc -parse-as-library
+    BIN=$(swift build --scratch-path "$SCRATCH" -c release --triple "$TRIPLE" --show-bin-path)
+    [ -f "$BIN/DarkwareZapret" ] || { echo "Swift executable missing for $ARCH." >&2; exit 1; }
+    SWIFT_BINARIES+=("$BIN/DarkwareZapret")
+done
+UNIVERSAL="$ROOT/.build/DarkwareZapret-universal"
+xcrun lipo -create "${SWIFT_BINARIES[@]}" -output "$UNIVERSAL"
+xcrun lipo "$UNIVERSAL" -verify_arch arm64 x86_64
+rm -rf "$APP"
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources/Engines" "$APP/Contents/Resources/Licenses"
+cp "$UNIVERSAL" "$APP/Contents/MacOS/DarkwareZapret"
+cp -R "$ROOT/native" "$APP/Contents/Resources/Native"
+cp "$ROOT/.build/engines/snapshot-list" "$APP/Contents/Resources/Native/snapshot-list"
+cp "$ROOT/.build/engines/"{utunws,tpws,ciadpi} "$APP/Contents/Resources/Engines/"
+cp "$ROOT/DarkwareZapret.icns" "$APP/Contents/Resources/AppIcon.icns"
+cp "$ROOT/LICENSE" "$APP/Contents/Resources/Licenses/DarkwareZapret.txt"
+cp "$ROOT/vendor/flowseal/LICENSE" "$APP/Contents/Resources/Licenses/Flowseal.txt"
+cp "$ROOT/vendor/zapret/LICENSE.txt" "$APP/Contents/Resources/Licenses/zapret.txt"
+cp "$ROOT/vendor/byedpi/LICENSE" "$APP/Contents/Resources/Licenses/ByeDPI.txt"
+cp "$ROOT/vendor/zapret/tpws/andr/_musl_license.txt" "$APP/Contents/Resources/Licenses/musl.txt"
+cp "$ROOT/vendor/zapret/tpws/epoll-shim/LICENSE" "$APP/Contents/Resources/Licenses/epoll-shim.txt"
+cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>CFBundleName</key>
-    <string>$APP_NAME</string>
-    <key>CFBundleDisplayName</key>
-    <string>$APP_NAME</string>
-    <key>CFBundleIdentifier</key>
-    <string>$BUNDLE_IDENTIFIER</string>
-    <key>CFBundleExecutable</key>
-    <string>$APP_NAME</string>
-    <key>CFBundleIconFile</key>
-    <string>AppIcon</string>
-    <key>CFBundlePackageType</key>
-    <string>APPL</string>
-    <key>CFBundleShortVersionString</key>
-    <string>$VERSION</string>
-    <key>LSMinimumSystemVersion</key>
-    <string>13.0</string>
-    <key>LSUIElement</key>
-    <true/> <!-- This hides the app from the Dock (Tray-only app) -->
-    <key>NSHighResolutionCapable</key>
-    <true/>
-</dict>
-</plist>
-EOF
-
-# chmod
-chmod +x "$OUTPUT_DIR/$APP_NAME.app/Contents/MacOS/$APP_NAME"
-chmod +x "$OUTPUT_DIR/$APP_NAME.app/Contents/Resources/install_darkware.sh"
-
-echo "App Bundle created at $OUTPUT_DIR/$APP_NAME.app"
-
-
-# Refresh bundle to ensure icon is picked up
-touch "$OUTPUT_DIR/$APP_NAME.app"
-
-# Ad-hoc Code Signing (Required for Apple Silicon to run without "Damaged" error)
-echo "Signing App Bundle (Ad-Hoc)..."
-codesign --force --deep --sign - "$OUTPUT_DIR/$APP_NAME.app"
-
-echo "Creating DMG Installer..."
-DMG_NAME="DarkwareZapret_v${VERSION}_Installer"
-VOL_NAME="Darkware Zapret Installer"
-STAGING_DIR="./dmg_staging"
-
-# Clean up
-rm -rf "$STAGING_DIR"
-rm -f "$OUTPUT_DIR/$DMG_NAME.dmg"
-rm -f "$OUTPUT_DIR/pack.temp.dmg"
-
-# Prepare staging
-mkdir -p "$STAGING_DIR"
-cp -R "$OUTPUT_DIR/$APP_NAME.app" "$STAGING_DIR/"
-ln -s /Applications "$STAGING_DIR/Applications"
-
-# Create temporary writable DMG
-hdiutil create -srcfolder "$STAGING_DIR" -volname "$VOL_NAME" -fs HFS+ -fsargs "-c c=64,a=16,e=16" -format UDRW -size 200M "$OUTPUT_DIR/pack.temp.dmg"
-
-# Mount it
-DEVICE=$(hdiutil attach -readwrite -noverify "$OUTPUT_DIR/pack.temp.dmg" | egrep '^/dev/' | sed 1q | awk '{print $1}')
-sleep 2
-
-# Copy Volume Icon
-if [ -f "DarkwareZapret.icns" ]; then
-    cp "DarkwareZapret.icns" "/Volumes/$VOL_NAME/.VolumeIcon.icns"
-    # Set volume icon attribute using xcrun for reliability
-    xcrun SetFile -a C "/Volumes/$VOL_NAME" 2>/dev/null || true
-else
-    echo "Warning: DarkwareZapret.icns not found, skipping icon setup."
-fi
-
-# Customize with AppleScript
-echo "Customizing DMG appearance..."
-osascript <<EOF
-tell application "Finder"
-    tell disk "$VOL_NAME"
-        open
-        
-        -- Wait for window to actually open
-        delay 2
-        
-        set current view of container window to icon view
-        set toolbar visible of container window to false
-        set statusbar visible of container window to false
-        
-        -- Clean window size
-        set the bounds of container window to {400, 100, 900, 450}
-        
-        set theViewOptions to the icon view options of container window
-        set arrangement of theViewOptions to not arranged
-        set icon size of theViewOptions to 100
-        
-        -- Position icons centered
-        set position of item "$APP_NAME" of container window to {120, 170}
-        set position of item "Applications" of container window to {380, 170}
-        
-        update without registering applications
-        delay 2
-        close
-    end tell
-end tell
-EOF
-
-# Unmount
-hdiutil detach "$DEVICE"
-
-# Convert to final compressed DMG
-echo "Compressing final DMG..."
-hdiutil convert "$OUTPUT_DIR/pack.temp.dmg" -format UDZO -imagekey zlib-level=9 -o "$OUTPUT_DIR/$DMG_NAME.dmg"
-
-# Cleanup
-rm -f "$OUTPUT_DIR/pack.temp.dmg"
-rm -rf "$STAGING_DIR"
-
-echo "Done! Installer created at $OUTPUT_DIR/$DMG_NAME.dmg"
+<plist version="1.0"><dict>
+<key>CFBundleName</key><string>darkware zapret</string>
+<key>CFBundleDisplayName</key><string>darkware zapret</string>
+<key>CFBundleIdentifier</key><string>com.darkware.zapret</string>
+<key>CFBundleExecutable</key><string>DarkwareZapret</string>
+<key>CFBundleIconFile</key><string>AppIcon</string>
+<key>CFBundlePackageType</key><string>APPL</string>
+<key>CFBundleShortVersionString</key><string>$CORE_VERSION</string>
+<key>CFBundleVersion</key><string>$BUNDLE_VERSION</string>
+<key>DarkwareReleaseVersion</key><string>$VERSION</string>
+<key>LSMinimumSystemVersion</key><string>13.0</string>
+<key>LSUIElement</key><true/>
+<key>NSHighResolutionCapable</key><true/>
+</dict></plist>
+PLIST
+plutil -lint "$APP/Contents/Info.plist"
+xcrun lipo "$APP/Contents/MacOS/DarkwareZapret" -verify_arch arm64 x86_64
+/usr/bin/python3 "$ROOT/scripts/write-provenance.py" "$APP" "$VERSION" "$APP/Contents/Resources/build-provenance.json"
+# Engines/helpers were signed first. Seal the outer app without resigning them.
+codesign --force --sign - "$APP"
+codesign --verify --deep --strict --verbose=2 "$APP"
+/usr/bin/python3 "$ROOT/scripts/write-provenance.py" "$APP" "$VERSION" "$DIST/$STEM.provenance.json" --sealed
+# Headless packaging does not launch Finder, mount a volume or change host state.
+STAGE=$(mktemp -d "$ROOT/.build/dmg-stage.XXXXXX")
+trap 'rm -rf "$STAGE"' EXIT
+cp -R "$APP" "$STAGE/"
+ln -s /Applications "$STAGE/Applications"
+rm -f "$DIST/${STEM}_Installer.dmg" "$DIST/${STEM}.zip" "$DIST/${STEM}_Source.tar.gz"
+hdiutil create -srcfolder "$STAGE" -volname 'Darkware Zapret' -format UDZO -imagekey zlib-level=9 "$DIST/${STEM}_Installer.dmg"
+ditto -c -k --sequesterRsrc --keepParent "$APP" "$DIST/${STEM}.zip"
+SOURCE_FILES=(Sources vendor native scripts Package.swift VERSION create_app.sh install_darkware.sh uninstall_darkware.sh LICENSE DarkwareZapret.icns)
+for ITEM in Tests docs README.md README.ru.md; do [ ! -e "$ITEM" ] || SOURCE_FILES+=("$ITEM"); done
+tar -czf "$DIST/${STEM}_Source.tar.gz" "${SOURCE_FILES[@]}"
+(
+    cd "$DIST"
+    shasum -a 256 "${STEM}_Installer.dmg" "${STEM}.zip" "${STEM}_Source.tar.gz" "${STEM}.provenance.json" > SHA256SUMS
+    shasum -a 256 -c SHA256SUMS
+)
+printf '%s\n' "Release artifacts ready in $DIST"

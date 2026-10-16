@@ -1,0 +1,34 @@
+{
+  "flowseal": {
+    "repository": "https://github.com/Flowseal/zapret-mac-discord-youtube",
+    "tag": "1.1.2",
+    "commit": "94c3b5125b4904ce2f6aec0e2197fe17f2fadf14",
+    "license": "MIT",
+    "paths": ["nfq", "macos/Payload/strategies", "macos/Payload/default-lists", "macos/Payload/bin", "macos/Payload/strategies.tsv", "macos/Payload/ipset-any.txt", "macos/Payload/ipset-none.txt"],
+    "local": ["vendor/flowseal", "native/strategies", "native/default-lists", "native/bin"]
+  },
+  "zapret": {
+    "repository": "https://github.com/bol-van/zapret",
+    "tag": "v72.13",
+    "commit": "87e058624c72863db53bdaf7fb6f16576dddb6ab",
+    "license": "MIT",
+    "paths": ["tpws", "docs/LICENSE.txt"],
+    "local": ["vendor/zapret"],
+    "bundledDependencies": {
+      "epoll-shim": {
+        "sourceRevision": "Included in the pinned zapret tpws source tree",
+        "license": "MIT, Copyright (c) 2016 Jan Kokemüller",
+        "licenseSource": "https://raw.githubusercontent.com/jiixyj/epoll-shim/master/LICENSE",
+        "licenseLocal": "vendor/zapret/tpws/epoll-shim/LICENSE"
+      }
+    }
+  },
+  "byedpi": {
+    "repository": "https://github.com/hufrea/byedpi",
+    "tag": "v0.17.3",
+    "commit": "7efde1b1296eaaa187b70e951894dde17527489c",
+    "license": "MIT",
+    "paths": ["C source and headers", "Makefile", "LICENSE"],
+    "local": ["vendor/byedpi"]
+  }
+}

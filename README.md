@@ -3,98 +3,75 @@
 [![Release](https://img.shields.io/github/v/release/RoninReilly/darkware-zapret?style=flat&color=green)](https://github.com/RoninReilly/darkware-zapret/releases/latest)
 [![Platform](https://img.shields.io/badge/platform-macOS%2013%2B-black?style=flat)](https://github.com/RoninReilly/darkware-zapret)
 [![License](https://img.shields.io/github/license/RoninReilly/darkware-zapret?style=flat&color=blue)](LICENSE)
-[![Stars](https://img.shields.io/github/stars/RoninReilly/darkware-zapret?style=flat&color=yellow)](https://github.com/RoninReilly/darkware-zapret/stargazers)
 
 **[На русском](README.ru.md)**
 
-**Darkware Zapret** is a native macOS menu bar app that wraps the [zapret](https://github.com/bol-van/zapret) DPI bypass tool into a simple one-click solution.
+Native macOS menu bar app for DPI bypass, with an experimental packet engine and two local SOCKS engines. The 2.0 beta adds a packet path based on [Flowseal's Mac fork](https://github.com/Flowseal/zapret-mac-discord-youtube), safer process control, recoverable proxy settings and HTTPS diagnostics.
 
-![Darkware Zapret UI](assets/preview.png)
+**Darkware 2.0 is the app version.** It does not bundle zapret2: [upstream zapret2](https://github.com/bol-van/zapret2) does not support macOS. Version **2.0.0-beta.1 is a prerelease**; the latest stable release remains 1.0.39.
 
-## Features
+## Choose a mode
 
-- **Native macOS UI** — Clean SwiftUI interface in your menu bar
-- **One-Click Toggle** — Instantly enable/disable DPI bypass
-- **Multiple Strategies** — Switch between bypass methods for different services
-- **Auto-Start** — Launches automatically on system startup
-- **Auto-Hostlist** — Automatically detects and adds blocked domains
+| Engine | Requirements | Traffic and limits |
+| --- | --- | --- |
+| Native Packet · experimental | macOS 14+, administrator access | `nfqws` through `utun`/BPF, 21 Flowseal profiles, IPv4 TCP/UDP packet processing. May conflict with tunnel VPNs. Effectiveness, QUIC and Discord voice need testing on your network. |
+| zapret · tpws | macOS 13+ | Local SOCKS5 for TCP. The proxy process runs without root. |
+| ByeDPI | macOS 13+ | Local SOCKS5 with TCP strategies. No automatic capture of application UDP/voice. |
 
-## Installation
+Universal binaries include Apple Silicon and Intel. SOCKS works for applications that use it. Enabling the system SOCKS setting does **not** route every application's traffic or all UDP through the proxy. DPI bypass does not supply an external VPN server and does not solve every DNS or IP block.
 
-1. Download [`DarkwareZapret_Installer.dmg`](https://github.com/RoninReilly/darkware-zapret/releases/latest) from Releases
-2. Open DMG, drag app to **Applications**
-3. Launch the app
-4. Click **Install Service** (requires admin password once)
-5. Toggle switch to **ON**
+## Install and connect
 
-> **Note:** If you see "App is damaged" error, run in Terminal:
-> ```bash
-> /usr/bin/xattr -cr /Applications/"darkware zapret.app"
-> ```
+1. Download the beta DMG from [2.0.0-beta.1](https://github.com/RoninReilly/darkware-zapret/releases/tag/v2.0.0-beta.1), open it and drag **darkware zapret.app** to **Applications**. Use [latest stable](https://github.com/RoninReilly/darkware-zapret/releases/latest) if you do not want the beta.
+2. Open the app and click its shield in the menu bar. If macOS blocks an unsigned build, use **System Settings → Privacy & Security → Open Anyway** after checking the download source.
+3. For an existing 1.x installation, choose **Migrate service…** and approve the macOS administrator prompt. This retires the old service and sudo permissions; saved custom strategies are kept.
+4. Select an engine and strategy, then **Connect**. For SOCKS, configure `127.0.0.1:1080` in your application, or explicitly enable **System SOCKS proxy**. Changing system settings may require macOS authorization. For Native Packet, disconnect tunnel VPNs first and approve administrator access.
+5. Use **Disconnect** before changing the engine or strategy. **Quit** also stops Darkware and restores its proxy settings; restoration errors keep the app open with a recovery action.
 
-## Engines
+System SOCKS changes are journalled and restored on disconnect; recovery also runs at the next launch after an app crash. If another program changes proxy settings meanwhile, Darkware preserves those changes. The old 1.x app did not save the original proxy settings, so verify them before the first 2.0 connection.
 
-### tpws
-Lightweight TCP-only transparent proxy. Best for simple web browsing and standard HTTPS bypass.
-- **Protocol:** TCP Only
-- **Mode:** Transparent Proxy
+## Profiles and diagnostics
 
-### ciadpi (ByeDPI)
-Advanced SOCKS5 proxy with **UDP support**.
-- **Protocol:** TCP + UDP
-- **Mode:** System SOCKS5 Proxy (Auto-configured)
-- **Features:** Fake packets, UDP traversal
+- **Diagnose** compares direct HTTPS with two requests through each local SOCKS preset. It does not change system settings. A successful result validates that domain over HTTPS, rather than video playback, QUIC, packet mode or Discord voice. Select the suggested preset explicitly to use it.
+- **Custom strategies** accepts quoted arguments for tpws/ByeDPI as an argument array; shell expressions are not executed. The app manages listener, process and file options.
+- In packet mode, use **Open domain lists** to edit user lists under `~/Library/Application Support/DarkwareZapret/lists`; reconnect to apply changes. IPSet choices are domains only, the bundled IP list or all IPv4.
+- **Activity log**, report copying and **Launch at login** are available from the menu. Login launch opens the app; it does not automatically connect.
 
-## Strategies
+If connectivity fails, disconnect and use **Restore network** if shown. If the app is force-killed while system SOCKS is enabled, reopen it to recover the saved settings. Include macOS version, engine, strategy and the copied diagnostic report in an [issue](https://github.com/RoninReilly/darkware-zapret/issues). Redact private domains and addresses before sharing.
 
-### tpws Strategies
-| Strategy | Description |
-|----------|-------------|
-| **Split+Disorder** | Splits TCP packet at position 1 and middle of domain name (midsld). Sends second fragment before first using `--disorder` flag. DPI expects ordered packets and fails to reassemble the hostname. |
-| **TLSRec+Split** | Creates two TLS records by splitting at SNI extension boundary (`--tlsrec=sniext`). Combined with TCP split at midsld position and disorder. DPI sees incomplete TLS handshake in first record. |
-| **TLSRec MidSLD** | Splits TLS record right in the middle of second-level domain (`--tlsrec=midsld`). Example: `disco` + `rd.com`. DPI cannot match partial domain against blocklist. |
-| **TLSRec+OOB** | All of the above plus `--hostdot` which adds a dot after hostname in HTTP Host header. Additional confusion layer for HTTP-level DPI inspection. |
+## Build from source
 
-### ciadpi Strategies
-| Strategy | Description |
-|----------|-------------|
-| **Disorder (Simple)** | Splits TCP stream at the first byte (`-d 1`). Sends the first byte *after* the rest of the packet. Extremely effective against most DPI systems. |
-| **Disorder (SNI)** | Splits at the SNI (Server Name Indication) position. More precise but slightly more complex than simple disorder. |
-| **Fake (OOB)** | Injects Out-of-Band (OOB) data. Effective strategy that confuses DPI inspection logic without relying on TTL tricks. |
-| **Auto (Torst)** | Automatically detects the block type using `torst` method and applies the best bypass technique. |
-
-## How it Works
-
-The app uses `tpws` (transparent proxy) or `ciadpi` (SOCKS5 proxy) to modify outgoing traffic, bypassing DPI (Deep Packet Inspection) filters. TCP traffic is redirected through macOS PF firewall rules, while UDP traffic is routed via system SOCKS settings (when using ciadpi).
-
-## Build from Source
+Requires macOS, Xcode Command Line Tools and Swift 6. The source tree contains pinned engine sources; engine builds do not fetch mutable upstream branches.
 
 ```bash
 git clone https://github.com/RoninReilly/darkware-zapret.git
 cd darkware-zapret
-# Compile TPWS binary
-cd zapret_src/tpws && make mac && cd ../..
-# Build App
-./create_app.sh
+git checkout v2.0.0-beta.1
+./scripts/build-engines.sh
+./scripts/check-engine-presets.sh
+./scripts/test-native.sh
+./scripts/check-runtime.sh
+./scripts/check-runtime-engines.sh
+swift test
+./create_app.sh v2.0.0-beta.1
 ```
 
-> **Note:** Building requires macOS 15+ and Xcode 16+ (Swift 6). The pre-built binary from [Releases](https://github.com/RoninReilly/darkware-zapret/releases) works on macOS 13+.
+Full `swift test` requires the Swift Testing modules supplied by Xcode. On a CLT-only installation, the two runtime check scripts above run the standalone regression and engine suites.
 
-## Credits
+See [beta release notes](docs/RELEASE-v2.0.0-beta.1.md), [research dated October 16, 2026](docs/RESEARCH-2026-10.md), and [release acceptance plan](docs/RELEASE-PLAN.md). Local tests and universal compilation do not replace real ISP and hardware testing. Developer ID signing and Apple notarization depend on release credentials; ad-hoc signatures are not notarization.
 
-- Powered by [zapret](https://github.com/bol-van/zapret) by bol-van
-- Powered by [byedpi](https://github.com/hufrea/byedpi) by hufrea (ciadpi engine)
-- Hostlist from [Re-filter](https://github.com/1andrevich/Re-filter-lists)
+## Credits and license
 
-## Support
+- [bol-van / zapret](https://github.com/bol-van/zapret): original zapret and tpws.
+- [Flowseal / zapret-mac-discord-youtube](https://github.com/Flowseal/zapret-mac-discord-youtube): macOS packet port and profiles.
+- [hufrea / ByeDPI](https://github.com/hufrea/byedpi): ciadpi.
+- [Re-filter](https://github.com/1andrevich/Re-filter-lists): hostlist source used by earlier versions.
 
-Development requires an Apple Developer Program membership ($99/year) to sign and notarize the app, protecting it from "damaged" errors and Gatekeeper blocks.
+Darkware is an independent app. Source and bundled upstream notices are distributed under their respective licenses; Darkware itself uses the [MIT License](LICENSE).
 
-If you'd like to help fund the certificate:
+## Support development
+
+Donations help fund development and an Apple Developer membership for signing and notarization.
 
 - **Solana (SOL):** `2CP3BLyPSjiKYcr6j17UJ35FmmBdvVWkWwESqaeuqMCu`
 - **ETH / Polygon:** `0x8aa4a9784995C8f558A46CdB604C7440d0506044`
-
-## License
-
-MIT License

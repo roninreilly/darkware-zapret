@@ -1,0 +1,35 @@
+name: Checks
+on:
+  pull_request:
+  push:
+    branches: [main, master, 'codex/**']
+permissions:
+  contents: read
+jobs:
+  macos:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Swift tests and native script checks
+        run: |
+          ./scripts/test-native.sh
+          swift test
+      - name: Universal engine builds and all 63 preset parses
+        run: |
+          ./scripts/build-engines.sh
+          ./scripts/check-runtime-engines.sh
+          ./scripts/check-engine-presets.sh
+          /usr/bin/python3 ./scripts/test-native-lifecycle.py
+          /usr/bin/python3 ./scripts/smoke-socks.py .build/engines
+      - name: Universal application build
+        run: |
+          BINARIES=()
+          for ARCH in arm64 x86_64; do
+            SCRATCH=".build/app-$ARCH"
+            TRIPLE="$ARCH-apple-macosx13.0"
+            swift build --scratch-path "$SCRATCH" -c release --triple "$TRIPLE" -Xswiftc -parse-as-library
+            BIN=$(swift build --scratch-path "$SCRATCH" -c release --triple "$TRIPLE" --show-bin-path)
+            BINARIES+=("$BIN/DarkwareZapret")
+          done
+          xcrun lipo -create "${BINARIES[@]}" -output .build/DarkwareZapret-universal
+          xcrun lipo .build/DarkwareZapret-universal -verify_arch arm64 x86_64
