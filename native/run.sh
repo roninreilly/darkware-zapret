@@ -61,9 +61,14 @@ PF_OUTPUT=$(/sbin/pfctl -E 2>&1) || fail 'Cannot obtain a PF enable reference.'
 TOKEN=$(printf '%s\n' "$PF_OUTPUT" | /usr/bin/awk '/Token :/ {print $3; exit}')
 case "$TOKEN" in ''|*[!0-9]*) fail 'PF did not return an enable token.' ;; esac
 printf '%s\n' "$TOKEN" > "$RUN/pf-token"
+# Leave loopback, LAN, link-local, shared, multicast and reserved destinations
+# on their normal routes. `self` also excludes this Mac's public addresses.
+# Only narrow route-to rules are added; local traffic continues through the
+# existing firewall rules without a broad pass/quick exception.
 printf '%s\n' \
- 'pass out quick route-to (utun50 10.77.0.2) inet proto tcp from any to any port {80,443,2053,2083,2087,2096,8443} user { >root } no state' \
- 'pass out quick route-to (utun50 10.77.0.2) inet proto udp from any to any port {443,19294:19344,50000:50100} user { >root } no state' \
+ 'table <darkware_local> const { self, 0.0.0.0/8, 10.0.0.0/8, 100.64.0.0/10, 127.0.0.0/8, 169.254.0.0/16, 172.16.0.0/12, 192.0.0.0/24, 192.0.2.0/24, 192.88.99.0/24, 192.168.0.0/16, 198.18.0.0/15, 198.51.100.0/24, 203.0.113.0/24, 224.0.0.0/4, 240.0.0.0/4 }' \
+ 'pass out quick route-to (utun50 10.77.0.2) inet proto tcp from any to ! <darkware_local> port {80,443,2053,2083,2087,2096,8443} user { >root } no state' \
+ 'pass out quick route-to (utun50 10.77.0.2) inet proto udp from any to ! <darkware_local> port {443,19294:19344,50000:50100} user { >root } no state' \
  | /sbin/pfctl -a "$ANCHOR" -f -
 printf '%s\n' "$ENGINE_PID" > "$RUN/ready"
 while kill -0 "$ENGINE_PID" 2>/dev/null; do

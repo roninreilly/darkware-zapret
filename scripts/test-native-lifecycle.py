@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """Run the real supervisor/watchdog scripts against isolated command stubs.
-No privileged command from the host is executed. All writes stay in .build/.
+Privileged operations are mocked. PF syntax is checked with pfctl's read-only
+no-action flag; no host rules are loaded. All writes stay in .build/.
 """
+import ipaddress
 import os
 import pathlib
+import re
 import signal
 import subprocess
 import tempfile
@@ -73,7 +76,7 @@ elif name=='pfctl':
     if a==['-sr']: print('anchor "com.apple/*" all')
     if a==['-E']: print('Token : 12345')
     if '-f' in a:
-        sys.stdin.read()
+        (root/'rules.conf').write_text(sys.stdin.read())
         if os.environ['MOCK_SCENARIO']=='pf-load-failure': sys.exit(1)
 elif name in ('netstat','ping'): pass
 else: raise RuntimeError(name)
@@ -119,6 +122,24 @@ else: raise RuntimeError(name)
             assert any('-a com.apple/darkware-zapret -f -' == line for line in pf), pf
             assert any('-a com.apple/darkware-zapret -F all' == line for line in pf), pf
             assert not (runtime / 'pf-token').exists()
+            rules = (case / 'rules.conf').read_text().splitlines()
+            assert len(rules) == 3, rules
+            assert rules[0].startswith('table <darkware_local> const { self, '), rules
+            networks = [ipaddress.ip_network(value) for value in re.findall(r'\d+\.\d+\.\d+\.\d+/\d+', rules[0])]
+            for address in ('0.1.2.3', '10.1.2.3', '100.64.1.2', '127.0.0.1', '127.1.2.3',
+                            '169.254.1.2', '172.16.1.2', '172.31.255.254', '192.0.0.1',
+                            '192.0.2.1', '192.88.99.1', '192.168.1.1', '198.18.0.1',
+                            '198.19.255.254', '198.51.100.1', '203.0.113.1', '224.0.0.1',
+                            '239.255.255.250', '240.0.0.1', '255.255.255.255'):
+                assert any(ipaddress.ip_address(address) in net for net in networks), address
+            for address in ('1.1.1.1', '8.8.8.8', '104.18.32.7'):
+                assert not any(ipaddress.ip_address(address) in net for net in networks), address
+            for rule, protocol in zip(rules[1:], ('tcp', 'udp')):
+                assert rule.startswith('pass out quick route-to (utun50 10.77.0.2) '), rule
+                assert f'inet proto {protocol} from any to ! <darkware_local> port ' in rule, rule
+            parsed = subprocess.run(['/sbin/pfctl', '-n', '-f', str(case / 'rules.conf')],
+                                    text=True, capture_output=True)
+            assert parsed.returncode == 0, parsed.stderr
         except Exception:
             log.flush()
             print((case / 'output.log').read_text())
